@@ -1,0 +1,182 @@
+import bake1 from "../assets/bannerbook/bake1.jpg";
+import bake2 from "../assets/bannerbook/bake2.jpg";
+import bake3 from "../assets/bannerbook/bake3.jpg";
+import bake4 from "../assets/bannerbook/bake4.jpg";
+import bake5 from "../assets/bannerbook/bake5.jpg";
+import bake6 from "../assets/bannerbook/Bake6.jpg";
+import bake7 from "../assets/bannerbook/bake7.jpg";
+
+// export const books = [
+//   {
+//     _id: "1",
+//     name: "The Great Escape",
+//     image: bake1,
+//     price: 15,
+//     description: "Dive into a thrilling tale of adventure and courage.",
+//     category: "Fantasy",
+//     date: 1716634345448,
+//     popular: true,
+//   },
+//   {
+//     _id: "2",
+//     name: "Shadows of the Past",
+//     image: bake2,
+//     price: 20,
+//     description: "Unravel secrets hidden deep within a mysterious town.",
+//     category: "Fiction",
+//     date: 1716634345448,
+//     popular: true,
+//   },
+//   {
+//     _id: "3",
+//     name: "The Forgotten Island",
+//     image: bake3,
+//     price: 18,
+//     description: "A journey to an island lost in time.",
+//     category: "Fantasy",
+//     date: 1716634345448,
+//     popular: true,
+//   },
+//   {
+//     _id: "4",
+//     name: "Echoes in the Wind",
+//     image: bake4,
+//     price: 22,
+//     description: "A haunting story that lingers in your mind.",
+//     category: "Mystery",
+//     date: 1716634345448,
+//     popular: false,
+//   },
+//   {
+//     _id: "5",
+//     name: "Whispers of the Forest",
+//     image: bake5,
+//     price: 14,
+//     description: "Legends come to life in an enchanted woodland.",
+//     category: "Mystery",
+//     date: 1716634345448,
+//     popular: true,
+//   },
+//   {
+//     _id: "6",
+//     name: "The Time Collector",
+//     image: bake6,
+//     price: 19,
+//     description: "He who controls time holds all the power.",
+//     category: "Fiction",
+//     date: 1716634345448,
+//     popular: false,
+//   },
+//   {
+//     _id: "7",
+//     name: "Crimson Horizon",
+//     image: bake7,
+//     price: 21,
+//     description: "Sail into danger on the high seas.",
+//     category: "Adventure",
+//     date: 1716634345448,
+//     popular: true,
+//   },
+//   {
+//     _id: "8",
+//     name: "The Last Oracle",
+//     image: bake8,
+//     price: 16,
+//     description: "A prophecy threatens to reshape the world.",
+//     category: "Adventure",
+//     date: 1716634345448,
+//     popular: false,
+//   },
+//   {
+//     _id: "9",
+//     name: "The Great Escape",
+//     image: bake1,
+//     price: 17,
+//     description: "Dive into a thrilling tale of adventure and courage.",
+//     category: "Fantasy",
+//     date: 1716634345448,
+//     popular: true,
+//   },
+//   {
+//     _id: "10",
+//     name: "Shadows of the Past",
+//     image: bake2,
+//     price: 21,
+//     description: "Unravel secrets hidden deep within a mysterious town.",
+//     category: "Fiction",
+//     date: 1716634345448,
+//     popular: true,
+//   },
+//   {
+//     _id: "11",
+//     name: "The Forgotten Island",
+//     image: bake3,
+//     price: 19,
+//     description: "A journey to an island lost in time.",
+//     category: "Fantasy",
+//     date: 1716634345448,
+//     popular: true,
+//   },
+//   {
+//     _id: "12",
+//     name: "Echoes in the Wind",
+//     image: bake4,
+//     price: 24,
+//     description: "A haunting story that lingers in your mind.",
+//     category: "Mystery",
+//     date: 1716634345448,
+//     popular: false,
+//   },
+//   {
+//     _id: "13",
+//     name: "Whispers of the Forest",
+//     image: bake5,
+//     price: 27,
+//     description: "Legends come to life in an enchanted woodland.",
+//     category: "Mystery",
+//     date: 1716634345448,
+//     popular: true,
+//   },
+//   {
+//     _id: "14",
+//     name: "The Time Collector",
+//     image: bake6,
+//     price: 29,
+//     description: "He who controls time holds all the power.",
+//     category: "Fiction",
+//     date: 1716634345448,
+//     popular: false,
+//   },
+// ];
+
+
+export const categories = [
+  {
+    name: "fiction",
+    image: bake1,
+  },
+  {
+    name: "adventure",
+    image: bake2,
+  },
+  {
+    name: "mystery",
+    image: bake3,
+  },
+  {
+    name: "fantasy",
+    image: bake4,
+  },
+  {
+    name: "technology",
+    image: bake5,
+  },
+  {
+    name: "health & beauty",
+    image: bake6,
+  },
+  {
+    name: "books",
+    image: bake7,
+  },
+];

@@ -1,0 +1,28 @@
+# node_modules
+**/node_modules/
+
+# build output
+**/dist/
+**/build/
+
+# environment variables
+**/.env
+**/.env.local
+
+# logs
+**/logs/
+**/*.log
+
+# system files
+.DS_Store
+Thumbs.db
+
+# IDE folders
+.vscode/
+.idea/
+
+# coverage reports
+coverage/
+
+# Firebase / other temp folders
+**/.firebase/
