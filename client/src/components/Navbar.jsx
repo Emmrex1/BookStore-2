@@ -1,4 +1,4 @@
-// src/components/Navbar.jsx
+
 import React, { useContext, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -25,6 +25,8 @@ function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [scrollDir, setScrollDir] = useState("up");
+  const [lastScrollY, setLastScrollY] = useState(0);
   const [animateCart, setAnimateCart] = useState(false);
   const location = useLocation();
 
@@ -34,6 +36,20 @@ function Navbar() {
     { name: "Contact", href: "/contact" },
     { name: "About", href: "/about" },
   ];
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      if (currentY > lastScrollY && currentY > 100) {
+        setScrollDir("down");
+      } else {
+        setScrollDir("up");
+      }
+      setLastScrollY(currentY);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -62,271 +78,283 @@ function Navbar() {
   const avatarBorder = theme === "dark" ? "border-white" : "border-gray-800";
 
   return (
-    <header className="sticky top-0 left-0 w-full z-50 bg-white dark:bg-slate-900 shadow-sm">
-      <div className="max-w-screen-xl mx-auto px-4 py-4 flex justify-between items-center">
-        <Link
-          to="/"
-          className="text-2xl font-bold text-gray-900 dark:text-white"
-        >
-          Book<span className="text-orange-500">Store</span>
-        </Link>
-
-        <nav className="hidden lg:flex space-x-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.href}
-              className={`text-sm font-medium transition hover:text-orange-500 ${
-                location.pathname === link.href
-                  ? "text-orange-500"
-                  : "text-gray-700 dark:text-white"
-              }`}
-            >
-              {link.name}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-4 relative">
-          {/* Theme Toggle */}
-          <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            title="Toggle Theme"
-            className="text-xl text-gray-700 dark:text-white"
-          >
-            {theme === "dark" ? (
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 3v1m0 16v1m8.66-13.66l-.71.71M5.05 18.95l-.71.71M21 12h-1M4 12H3m16.66 4.66l-.71-.71M6.34 6.34l-.71-.71M12 6a6 6 0 100 12 6 6 0 000-12z"
-                />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M17.293 13.293A8 8 0 016.707 2.707a8 8 0 1010.586 10.586z" />
-              </svg>
-            )}
-          </button>
-
-          {/* Notification Bell */}
-          <div className="relative notification-dropdown">
-            <button
-              title="Notifications"
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative text-2xl text-gray-700 dark:text-white"
-            >
-              <RiNotificationLine />
-              {notifications.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                  {notifications.length}
-                </span>
-              )}
-            </button>
-
-            {/* Dropdown */}
-            {showNotifications && (
-              <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 shadow-lg rounded-md z-50 notification-dropdown">
-                <div className="p-3 border-b border-gray-200 dark:border-slate-700 font-semibold text-gray-700 dark:text-white">
-                  Notifications
-                </div>
-                <ul className="max-h-64 overflow-y-auto text-sm">
-                  {notifications.slice(0, 4).map((n, i) => (
-                    <li
-                      key={i}
-                      className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 cursor-pointer"
-                    >
-                      {n.message}
-                    </li>
-                  ))}
-                </ul>
-                <div className="p-2 text-center border-t border-gray-200 dark:border-slate-700">
-                  <Link
-                    to="/notifications"
-                    className="text-xs text-blue-500 hover:underline"
-                    onClick={() => setShowNotifications(false)}
-                  >
-                    View All
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Cart */}
-          <Link to="/cart" className="relative">
-            <RiShoppingBag4Line className="text-2xl text-gray-700 dark:text-white" />
-            {getCartCount() > 0 && (
-              <span
-                className={`absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full transition-transform duration-300 ${
-                  animateCart ? "scale-125" : "scale-100"
-                }`}
-              >
-                {getCartCount()}
-              </span>
-            )}
-          </Link>
-
-          {/* Avatar / Login */}
-          <div className="relative">
-            {token && user ? (
-              <img
-                onClick={() => setShowDropdown(!showDropdown)}
-                src={
-                  user.avatar
-                    ? user.avatar
-                    : `https://ui-avatars.com/api/?name=${user.name}&background=random&color=fff&bold=true`
-                }
-                alt="avatar"
-                className={`w-8 h-8 rounded-full object-cover cursor-pointer border-2 ${avatarBorder}`}
-              />
-            ) : (
-              <button
-                onClick={() => navigate("/login")}
-                className="flex items-center gap-1 px-3 py-1 text-sm border rounded transition"
-              >
-                Login <RiUserLine />
-              </button>
-            )}
-
-            {showDropdown && token && user && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg p-3 text-sm z-50 dropdown-menu">
-                <div className="flex items-center gap-2 mb-3">
-                  <img
-                    src={
-                      user.avatar
-                        ? user.avatar
-                        : `https://ui-avatars.com/api/?name=${user.name}&background=random&color=fff&bold=true`
-                    }
-                    className="w-8 h-8 rounded-full object-cover border"
-                    alt="User"
-                  />
-                  <button
-                    onClick={() => {
-                      navigate("/profile-settings");
-                      setShowDropdown(false);
-                    }}
-                    className={`font-medium text-left ${
-                      location.pathname === "/profile-settings"
-                        ? "text-orange-500"
-                        : "text-gray-700 dark:text-white"
-                    } hover:underline`}
-                  >
-                    {user.name}
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => {
-                    navigate("/profile");
-                    setShowDropdown(false);
-                  }}
-                  className="block w-full text-left px-3 py-2 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 rounded"
-                >
-                  Settings
-                </button>
-                <button
-                  onClick={() => {
-                    navigate("/order");
-                    setShowDropdown(false);
-                  }}
-                  className="block w-full text-left px-3 py-2 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 rounded"
-                >
-                  Orders
-                </button>
-                <button
-                  onClick={() => {
-                    logout();
-                    setShowDropdown(false);
-                  }}
-                  className="block w-full text-left px-3 py-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-600 rounded"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Mobile Toggle */}
+    <>
+      {/* Navbar */}
+      <header
+        className={`sticky top-0 left-0 w-full z-50 bg-white dark:bg-slate-900 shadow-sm transition-transform duration-300 ${
+          scrollDir === "down" ? "-translate-y-full" : "translate-y-0"
+        }`}
+      >
+        <div className="max-w-screen-xl mx-auto px-4 py-4 flex items-center justify-between">
+          {/* Mobile Menu Icon */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="lg:hidden text-gray-700 dark:text-white"
           >
             {mobileMenuOpen ? (
-              <RiCloseLine className="text-2xl" />
+              <RiCloseLine size={24} />
             ) : (
-              <RiMenuLine className="text-2xl" />
+              <RiMenuLine size={24} />
             )}
           </button>
-        </div>
-      </div>
 
-      {/* Mobile Nav */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden px-4 pb-6 bg-white dark:bg-slate-800 border-t dark:border-gray-700">
-          <ul className="flex flex-col gap-4 pt-4">
+          {/* Logo */}
+          <Link
+            to="/"
+            className="text-2xl font-bold text-gray-900 dark:text-white"
+          >
+            Book<span className="text-orange-500">Store</span>
+          </Link>
+
+          {/* Desktop Nav */}
+          <nav className="hidden lg:flex space-x-8 mx-auto">
             {navLinks.map((link) => (
-              <li key={link.name}>
-                <Link
-                  to={link.href}
-                  className="block text-gray-700 dark:text-white hover:text-orange-500"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {link.name}
-                </Link>
-              </li>
-            ))}
-            <li>
               <Link
-                to="/cart"
-                className="flex items-center gap-2"
-                onClick={() => setMobileMenuOpen(false)}
+                key={link.name}
+                to={link.href}
+                className={`text-sm font-medium transition hover:text-orange-500 ${
+                  location.pathname === link.href
+                    ? "text-orange-500"
+                    : "text-gray-700 dark:text-white"
+                }`}
               >
-                <RiShoppingBag4Line className="text-xl" /> Cart
+                {link.name}
               </Link>
-            </li>
-            <li>
-              {token ? (
-                <>
+            ))}
+          </nav>
+
+          {/* Right Icons */}
+          <div className="flex items-center gap-4 relative">
+            {/* Theme Toggle */}
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="text-xl text-gray-700 dark:text-white"
+            >
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
+
+            {/* Notifications */}
+            <div className="relative notification-dropdown hidden lg:block">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative text-2xl text-gray-700 dark:text-white"
+              >
+                <RiNotificationLine />
+                {notifications.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1 py-0.5 rounded-full">
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 shadow-lg rounded-md z-50 notification-dropdown">
+                  <div className="p-3 font-semibold border-b dark:border-slate-700">
+                    Notifications
+                  </div>
+                  <ul className="max-h-64 overflow-y-auto text-sm">
+                    {notifications.slice(0, 4).map((n, i) => (
+                      <li
+                        key={i}
+                        className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-slate-700 cursor-pointer"
+                      >
+                        {n.message}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="p-2 text-center border-t dark:border-slate-700">
+                    <Link
+                      to="/notifications"
+                      className="text-xs text-blue-500 hover:underline"
+                      onClick={() => setShowNotifications(false)}
+                    >
+                      View All
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Cart Icon */}
+            <Link to="/cart" className="relative">
+              <RiShoppingBag4Line className="text-2xl text-gray-700 dark:text-white" />
+              {getCartCount() > 0 && (
+                <span
+                  className={`absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full transition-transform duration-300 ${
+                    animateCart ? "scale-125" : "scale-100"
+                  }`}
+                >
+                  {getCartCount()}
+                </span>
+              )}
+            </Link>
+
+            {/* User Avatar / Login */}
+            <div className="relative">
+              {token && user ? (
+                <img
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  src={
+                    user.avatar
+                      ? user.avatar
+                      : `https://ui-avatars.com/api/?name=${user.name}&background=random`
+                  }
+                  alt="avatar"
+                  className={`w-8 h-8 rounded-full border-2 object-cover cursor-pointer ${avatarBorder}`}
+                />
+              ) : (
+                <button
+                  onClick={() => navigate("/login")}
+                  className="flex items-center gap-1 px-3 py-1 text-sm border rounded"
+                >
+                  Login <RiUserLine />
+                </button>
+              )}
+
+              {showDropdown && token && user && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 shadow-lg rounded p-3 z-50 dropdown-menu">
+                  <div className="flex items-center gap-2 mb-3">
+                    <img
+                      src={
+                        user.avatar
+                          ? user.avatar
+                          : `https://ui-avatars.com/api/?name=${user.name}&background=random`
+                      }
+                      className="w-8 h-8 rounded-full"
+                      alt="User"
+                    />
+                    <button
+                      onClick={() => {
+                        navigate("/profile-settings");
+                        setShowDropdown(false);
+                      }}
+                      className="text-sm font-medium hover:underline"
+                    >
+                      {user.name}
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigate("/profile");
+                      setShowDropdown(false);
+                    }}
+                    className="block w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-slate-700"
+                  >
+                    Settings
+                  </button>
                   <button
                     onClick={() => {
                       navigate("/orders");
-                      setMobileMenuOpen(false);
+                      setShowDropdown(false);
                     }}
-                    className="w-full text-left px-3 py-2 text-gray-700 dark:text-white hover:bg-orange-100 dark:hover:bg-slate-700 rounded"
+                    className="block w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-slate-700"
                   >
                     Orders
                   </button>
                   <button
                     onClick={() => {
                       logout();
+                      setShowDropdown(false);
+                    }}
+                    className="block w-full text-left px-3 py-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-600/20"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black bg-opacity-40"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="fixed top-0 left-0 z-50 h-full w-4/5 max-w-xs bg-white dark:bg-slate-900 shadow-lg p-6 animate-slide-in">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
+                Menu
+              </h2>
+              <button onClick={() => setMobileMenuOpen(false)}>
+                <RiCloseLine
+                  size={24}
+                  className="text-gray-700 dark:text-white"
+                />
+              </button>
+            </div>
+            <nav className="flex flex-col gap-4">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  to={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-base font-medium text-gray-800 dark:text-white hover:text-orange-500 transition"
+                >
+                  {link.name}
+                </Link>
+              ))}
+              <hr className="my-4 border-gray-300 dark:border-gray-700" />
+              {token && user ? (
+                <>
+                  <Link
+                    to="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-base font-medium text-gray-800 dark:text-white hover:text-orange-500"
+                  >
+                    Profile
+                  </Link>
+                  <Link
+                    to="/orders"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-base font-medium text-gray-800 dark:text-white hover:text-orange-500"
+                  >
+                    Orders
+                  </Link>
+                  <button
+                    onClick={() => {
+                      logout();
                       setMobileMenuOpen(false);
                     }}
-                    className="w-full text-left px-3 py-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-600 rounded"
+                    className="text-left text-base text-red-600 hover:text-red-800 transition"
                   >
                     Logout
                   </button>
                 </>
               ) : (
-                <Link
-                  to="/login"
-                  className="block px-3 py-2 text-gray-700 dark:text-white hover:text-orange-500"
-                  onClick={() => setMobileMenuOpen(false)}
+                <button
+                  onClick={() => {
+                    navigate("/login");
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-left text-base font-medium text-gray-800 dark:text-white hover:text-orange-500 transition"
                 >
                   Login
-                </Link>
+                </button>
               )}
-            </li>
-          </ul>
-        </div>
+            </nav>
+          </div>
+        </>
       )}
-    </header>
+
+      {/* Floating Cart Button */}
+      <button
+        onClick={() => navigate("/cart")}
+        className="fixed bottom-5 right-5 z-50 bg-orange-500 text-white p-4 rounded-full shadow-lg hover:bg-orange-600 transition-all duration-300"
+      >
+        <div className="relative">
+          <RiShoppingBag4Line className="text-2xl" />
+          {getCartCount() > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-full">
+              {getCartCount()}
+            </span>
+          )}
+        </div>
+      </button>
+    </>
   );
 }
 
