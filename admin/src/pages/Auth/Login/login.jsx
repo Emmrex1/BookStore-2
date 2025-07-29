@@ -41,7 +41,12 @@ const Login = () => {
           email: data.email,
           password: data.password,
         },
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (res.data.success) {

@@ -76,7 +76,12 @@ const PlaceOrder = () => {
       const { data } = await axios.post(
         `${backendUrl}/api/order/${route}`,
         payload,
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (!data.success) {
