@@ -9,7 +9,7 @@ const Footer = () => {
           {/* Logo */}
           <div className="mb-6 md:mb-0">
             <a href="/" className="flex items-center space-x-2">
-              <img src="../../public/EmmrexCoder.png" alt="" />
+              <img src="/EmmrexCoder.png" alt="" />
             </a>
           </div>
 

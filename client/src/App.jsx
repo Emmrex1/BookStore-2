@@ -22,12 +22,12 @@ import Notifications from "./pages/Notifications/Notifications";
 import About from "./pages/About/About";
 import Error404 from "./pages/Error404/Error404";
 import ContactForm from "./pages/Contact/Contact";
+import Verify from "./pages/VerifyingOrder/Verifying";
 
 
 function App() {
   const location = useLocation();
   const currentPath = location.pathname;
-
   // Define paths where navbar should be hidden
   const noNavbarPaths = [
     "/login",
@@ -36,7 +36,6 @@ function App() {
     "/reset-success",
     "/reset-password",
   ];
-
   // Check if current path should hide navbar
   const shouldHideNavbar = noNavbarPaths.some((path) =>
     currentPath.startsWith(path)
@@ -52,6 +51,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/product/:id" element={<ProductDetails />} />
+        <Route path="/verify" element={<Verify />} />
 
         {/* Authentication routes */}
         <Route path="/login" element={<LoginPage />} />

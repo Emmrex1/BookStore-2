@@ -7,18 +7,19 @@ import userModel from "../model/userModel.js";
 import { logActivity } from "../utils/activityLogger.js";
 import sendEmail from "../utils/sendEmail.js";
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const DELIVERY_FEE = 1000; // in cents
+const CURRENCY = "usd";
 
 
 export const placeOrder = async (req, res) => {
   try {
     const { userId, items, amount, address } = req.body;
 
-    // ✅ Ensure userId is valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ success: false, message: "Invalid user ID" });
     }
 
-    // ✅ Get user info before using user?.name
     const user = await userModel.findById(userId);
 
     const orderData = {
@@ -75,124 +76,138 @@ if (admin) {
   }
 };
 
-// PLACE ORDER WITH STRIPE (TO BE IMPLEMENTED)
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 // PLACE ORDER WITH STRIPE
 export const placeOrderStripe = async (req, res) => {
-  try {
-    const { cartItems, shippingInfo, userId, email } = req.body;
+  const { userId, items, amount, address } = req.body;
+  const origin = req.headers.origin;
 
-    if (!cartItems || cartItems.length === 0) {
-      return res.status(400).json({ success: false, message: "Cart is empty" });
-    }
-
-    // Create Stripe line items
-    const line_items = cartItems.map((item) => ({
-      price_data: {
-        currency: "usd",
-        product_data: {
-          name: item.booktitle,
-          images: [item.imgurl],
-        },
-        unit_amount: Math.round(item.price * 100),
-      },
-      quantity: item.quantity,
-    }));
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items,
-      mode: "payment",
-      customer_email: email,
-      metadata: {
-        userId,
-        shippingInfo: JSON.stringify(shippingInfo),
-        cartItems: JSON.stringify(cartItems),
-      },
-      success_url: `${process.env.CLIENT_URL}/success`,
-      cancel_url: `${process.env.CLIENT_URL}/cancel`,
-    });
-
-    res.status(200).json({ success: true, url: session.url });
-  } catch (error) {
-    console.error("Stripe checkout error:", error.message);
-    res.status(500).json({ success: false, message: error.message });
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ success: false, message: "Invalid user ID" });
   }
+
+  const user = await userModel.findById(userId);
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+
+  const order = await OrderModel.create({
+    userId,
+    items,
+    amount,
+    address,
+    paymentMethod: "Stripe",
+    payment: false,
+    date: Date.now(),
+  });
+
+  const line_items = items.map(item => ({
+    price_data: {
+      currency: CURRENCY,
+      product_data: { name: item.name },
+      unit_amount: Math.round(item.price * 100),
+    },
+    quantity: item.quantity,
+  }));
+
+  line_items.push({
+    price_data: {
+      currency: CURRENCY,
+      product_data: { name: "Delivery charges" },
+      unit_amount: DELIVERY_FEE,
+    },
+    quantity: 1,
+  });
+
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ["card"],
+    mode: "payment",
+    success_url: `${origin}/verify?orderId=${order._id}&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/verify?orderId=${order._id}&canceled=true`,
+    line_items,
+    metadata: { orderId: order._id.toString() },
+  });
+
+  res.json({ success: true, sessionUrl: session.url });
 };
 
 // VERIFY STRIPE PAYMENT & CREATE ORDER (Webhook endpoint)
-export const verifyStripe = async (req, res) => {
+export const verifyCheckoutSession = async (req, res) => {
+  const { session_id, orderId } = req.query;
+
+  if (!session_id || !orderId) {
+    return res.status(400).json({ success: false, message: "Missing parameters" });
+  }
+
   try {
-    const sig = req.headers['stripe-signature'];
-    const event = stripe.webhooks.constructEvent(
-      req.rawBody, 
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
+    const session = await stripe.checkout.sessions.retrieve(session_id);
 
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object;
-      const cartItems = JSON.parse(session.metadata.cartItems);
-      const shippingInfo = JSON.parse(session.metadata.shippingInfo);
-      const userId = session.metadata.userId;
+    if (session.payment_status === "paid") {
+      const order = await OrderModel.findById(orderId);
 
-      const orderItems = cartItems.map((item) => ({
-        product: item._id,
-        quantity: item.quantity,
-        price: item.price,
-      }));
+      if (order && !order.payment) {
+        order.payment = true;
+        order.status = "Paid";
+        await order.save();
 
-      const order = new OrderModel({
-        user: userId,
-        orderItems,
-        shippingInfo,
-        paymentMethod: "Stripe",
-        paymentInfo: {
-          id: session.payment_intent,
-          status: "Paid",
-        },
-        totalPrice: cartItems.reduce(
-          (acc, item) => acc + item.price * item.quantity,
-          0
-        ),
-        paidAt: new Date(),
-        orderStatus: "Processing",
-      });
+        const user = await userModel.findById(order.userId);
 
-      await order.save();
+        await NotificationModel.create({
+          user: order.userId,
+          type: "order",
+          message: `Your payment for order ${orderId} was verified.`,
+        });
 
-      console.log("✅ Order saved for user:", session.customer_email);
+        await logActivity({
+          userId: order.userId,
+          user: user?.name || "Unknown",
+          action: "manual stripe verify",
+          item: "order",
+          status: "success",
+        });
+
+        if (user?.email?.trim()) {
+          await sendEmail({
+            to: user.email.trim(),
+            subject: "Order Verified",
+            html: `<h3>Hi ${user.name},</h3><p>Your payment for order <b>${orderId}</b> has been verified. Thank you!</p>`,
+          });
+        }
+      }
+
+      return res.json({ success: true, message: "Payment verified", session });
+    } else {
+      return res.status(400).json({ success: false, message: "Payment not completed" });
     }
-
-    res.status(200).json({ received: true });
   } catch (error) {
-    console.error("❌ Stripe webhook error:", error.message);
-    res.status(400).json({ success: false, message: error.message });
+    console.error("Stripe verify error:", error.message);
+    return res.status(500).json({ success: false, message: "Internal error" });
   }
 };
-
 
 // GET ALL ORDERS (ADMIN)
- export const allOrders = async (req, res) => {
-  try {
-    const orders = await OrderModel.find({})
-    res.json({ success: true, orders });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+export const allOrders = async (req, res) => {
+  const orders = await OrderModel.find().populate("userId", "name email").sort("-createdAt");
+  res.json({ success: true, orders });
 };
+
 
 // GET USER ORDERS
 export const userOrders = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: "Invalid user ID" });
+  }
+
   try {
-    const { id } = req.params;
-    const orders = await OrderModel.find({ user: id });
+    const orders = await OrderModel.find({ userId: id }).sort("-createdAt");
     res.json({ success: true, orders });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Error fetching user orders:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
 
 // UPDATE ORDER STATUS
 export const updateStatus = async (req, res) => {

@@ -33,7 +33,7 @@ const RecentActivity = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         setActivities(res.data);
-        console.log(res)
+        // console.log(res)
       } catch (err) {
         console.error("Failed to load recent activities", err);
       } finally {

@@ -63,7 +63,12 @@ const PopularBooks = () => {
         <Slider {...sliderSettings}>
           {popularBooks.map((book) => (
             <div key={book._id} className="px-3">
-              <Item book={book} showWishlist={true} showRating={true} />
+              <Item
+                book={book}
+                showWishlist={true}
+                showRating={true}
+                isPopular
+              />
             </div>
           ))}
         </Slider>
@@ -72,7 +77,7 @@ const PopularBooks = () => {
   }, [popularBooks, loading]);
 
   return (
-    <section className="py-10 px-4 sm:px-8 lg:px-20 bg-gray-50 dark:bg-gray-900">
+    <section className="py-10 px-7 sm:px-8 lg:px-20 bg-gray-50 dark:bg-gray-900">
       <Title
         title1="Popular"
         title2="Books"

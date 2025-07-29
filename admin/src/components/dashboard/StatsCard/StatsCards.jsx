@@ -30,7 +30,7 @@ const StatsCards = () => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-         console.log(res)
+        //  console.log(res)
         if (res.data.success) {
           setStats(res.data.stats);
         } else {

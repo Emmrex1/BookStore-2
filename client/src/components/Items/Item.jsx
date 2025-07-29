@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 import { ShopContext } from "../../context/ShopContext";
 import { Link } from "react-router-dom";
 
-const Item = ({ book, isNew }) => {
+const Item = ({ book, isNew, isPopular }) => {
   const { currency, addToCart } = useContext(ShopContext);
   const [wishlisted, setWishlisted] = useState(false);
 
@@ -32,30 +32,33 @@ const Item = ({ book, isNew }) => {
   };
 
   const renderStars = () => {
-    const stars = [];
-    const rating = Math.round(book.rating || 0); 
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        i <= rating ? (
-          <FaStar key={i} className="text-yellow-400" />
-        ) : (
-          <FaRegStar key={i} className="text-gray-300" />
-        )
-      );
-    }
-    return <div className="flex space-x-1">{stars}</div>;
+    const rating = Math.round(book.rating || 0);
+    return (
+      <div className="flex space-x-1 mb-1">
+        {[...Array(5)].map((_, i) =>
+          i < rating ? (
+            <FaStar key={i} className="text-yellow-400 text-sm" />
+          ) : (
+            <FaRegStar key={i} className="text-gray-300 text-sm" />
+          )
+        )}
+      </div>
+    );
   };
 
   return (
     <div className="bg-white dark:bg-slate-800 relative group shadow-md rounded-xl overflow-hidden transition-transform hover:-translate-y-1 duration-300 border dark:border-slate-700">
-      {/* New Badge */}
       {isNew && (
         <span className="absolute top-3 left-3 text-xs bg-green-600 text-white px-2 py-1 rounded-full z-10">
           New
         </span>
       )}
+      {isPopular && (
+        <span className="absolute top-3 left-3 text-xs bg-blue-600 text-white px-2 py-1 rounded-full z-10">
+          Popular
+        </span>
+      )}
 
-      {/* Wishlist Icon */}
       <button
         onClick={toggleWishlist}
         className="absolute top-3 right-3 z-10 text-red-500 bg-white dark:bg-slate-700 p-1 rounded-full hover:scale-110 transition"
@@ -65,7 +68,6 @@ const Item = ({ book, isNew }) => {
         {wishlisted ? <FaHeart size={18} /> : <FaRegHeart size={18} />}
       </button>
 
-      {/* Book Image */}
       <Link to={`/product/${book._id}`} className="block">
         <div className="p-4">
           <img
@@ -77,7 +79,6 @@ const Item = ({ book, isNew }) => {
         </div>
       </Link>
 
-      {/* Book Info */}
       <div className="px-4 pb-4">
         <div className="flex justify-between items-center mb-1">
           <h3 className="text-base font-semibold line-clamp-1">{book.name}</h3>
@@ -91,7 +92,7 @@ const Item = ({ book, isNew }) => {
           </button>
         </div>
 
-        <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+        <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400 mb-1">
           <p>{book.category}</p>
           <p className="text-blue-700 dark:text-blue-500 font-bold">
             {currency}
@@ -99,10 +100,9 @@ const Item = ({ book, isNew }) => {
           </p>
         </div>
 
-        {/* Star Rating */}
-        <div className="mb-2">{renderStars()}</div>
+        {renderStars()}
 
-        <p className="text-sm line-clamp-2 text-gray-600 dark:text-gray-300">
+        <p className="text-sm line-clamp-1 text-gray-600 dark:text-gray-300">
           {book.description}
         </p>
       </div>

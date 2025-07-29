@@ -23,21 +23,23 @@ const Badge = ({ text, color = "blue" }) => (
 );
 
 const Order = () => {
-  const { backendUrl, token, currency, addToCart } = useContext(ShopContext);
+  const { backendUrl, token, user, currency, addToCart } =
+    useContext(ShopContext);
   const [orderData, setOrderData] = useState([]);
   const [view, setView] = useState("list");
   const [trackingStates, setTrackingStates] = useState({});
 
   const loadOrderData = async () => {
-    if (!token) return;
+    if (!user?._id) return;
 
     try {
-      const response = await axios.post(
-        `${backendUrl}/api/order/userorders`,
-        { userId: token.id },
+      const response = await axios.get(
+        `${backendUrl}/api/order/userorders/${user._id}`,
         {
           withCredentials: true,
-          headers: { token },
+          headers: {
+            Authorization: `Bearer ${token}`, // Optional if you're using JWT middleware
+          },
         }
       );
 

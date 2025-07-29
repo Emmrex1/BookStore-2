@@ -25,6 +25,8 @@ import ProductListTable from "../dashboard/ProductList/ProductList";
 import { AdminContextApi } from "@/context/api/AdmincontexApi";
 import Orders from "../dashboard/Orders/Orders";
 import OrderAnalytics from "../dashboard/Analytics/Analytics";
+import AnalyticsDashboard from "../dashboard/Analytics/Analytics";
+import ProfileSettings from "@/setting/Profile/profile";
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -42,7 +44,7 @@ const DashboardLayout = () => {
     { name: "Users", icon: Users, id: "users" },
     { name: "Orders", icon: ShoppingCart, id: "orders" },
     { name: "Analytics", icon: BarChart3, id: "analytics" },
-    { name: "Settings", icon: Settings, id: "settings" },
+    { name: "Settings", icon: Settings, id: "profile" },
   ];
 
   const renderContent = () => {
@@ -66,7 +68,9 @@ const DashboardLayout = () => {
       case "orders":
         return <Orders />;
       case "analytics":
-        return <OrderAnalytics/>;
+       return <AnalyticsDashboard/>;
+      case "profile":
+        return <ProfileSettings/>;
       default:
         const section = navigation.find((n) => n.id === activeSection);
         return (

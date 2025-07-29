@@ -30,7 +30,7 @@ const NewArrivals = () => {
   const [newArrivals, setNewArrivals] = useState([]);
 
   useEffect(() => {
-    if (books && books.length > 0) {
+    if (books?.length > 0) {
       setNewArrivals(books.slice(0, 12));
     }
   }, [books]);
@@ -48,32 +48,34 @@ const NewArrivals = () => {
 
   const renderContent = useMemo(() => {
     if (loading) return renderSkeletons();
-    if (!newArrivals.length)
+
+    if (!newArrivals.length) {
       return (
         <p className="text-center text-gray-500 dark:text-gray-400">
           No books available.
         </p>
       );
+    }
 
     return (
-      <Slider {...sliderSettings}>
-        {newArrivals.map((book) => (
-          <motion.div
-            key={book._id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="px-3"
-          >
-            <Item book={book} />
-          </motion.div>
-        ))}
-      </Slider>
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <Slider {...sliderSettings}>
+          {newArrivals.map((book) => (
+            <div key={book._id} className="px-3">
+              <Item book={book} isNew />
+            </div>
+          ))}
+        </Slider>
+      </motion.div>
     );
   }, [newArrivals, loading]);
 
   return (
-    <section className="py-10 px-4 sm:px-8 lg:px-20 bg-gray-50 dark:bg-gray-900">
+    <section className="py-10 px-7 sm:px-8 lg:px-20 bg-gray-50 dark:bg-gray-900">
       <Title
         title1="New"
         title2="Arrivals"

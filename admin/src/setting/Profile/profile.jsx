@@ -125,7 +125,7 @@ const ProfileSettings = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
+    <div className="max-w-4xl mx-auto p-6 ">
       <div className="text-center space-y-2 py-10">
         <h1 className="text-2xl font-bold tracking-tight">Admin Profile Settings</h1>
         
