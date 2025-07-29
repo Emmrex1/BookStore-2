@@ -9,7 +9,8 @@ export const ShopContext = createContext();
 const ShopContextProvider = ({ children }) => {
   const currency = "$";
   const delivery_charges = 5;
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const backendUrl = import.meta.env.VITE_API_BASE_URL;
+  // console.log("back",backendUrl );
   const navigate = useNavigate();
 
   const [books, setBooks] = useState([]);

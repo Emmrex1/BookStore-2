@@ -8,9 +8,9 @@ import { Currency } from "lucide-react";
 export const AdminContextApi = createContext();
 
 const AdminContextApiProvider = ({ children }) => {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const backendUrl = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
-  const currency = "$"; 
+  const currency = "$";
 
   const [token, setToken] = useState(() => localStorage.getItem("token") || "");
   const [user, setUser] = useState(() => {
