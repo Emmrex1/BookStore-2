@@ -14,26 +14,31 @@ import orderRouter from "./routes/orderRoute.js";
 const app = express();
 const port = process.env.PORT || 4000;
 
-// Middlewares
+// Middleware
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(cors({
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-      "https://emmrexbookstore.vercel.app",
-      "https://emmrexbookstore-admin.vercel.app",
-     
-    ];
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-}));
+// CORS configuration
+const allowedOrigins = [
+  "https://emmrexbookstore.vercel.app",
+  "https://emmrexbookstore-admin.vercel.app",
+];
 
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      console.log("CORS request from:", origin);
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
+
+// Connect to DB
 connectDB().catch((err) => {
   console.error("Database connection failed:", err.message);
 });
