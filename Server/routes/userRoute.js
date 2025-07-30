@@ -13,6 +13,7 @@ import {
   markNotificationAsRead,
   forgotPassword,
   resetPassword,
+  handleRefreshToken,
 
 } from '../controller/userController.js';
 import verifyToken from '../middleware/verifyToken.js';
@@ -24,6 +25,7 @@ const userRouter = express.Router();
 // Public
 userRouter.post('/register', handleUserRegister);
 userRouter.post('/login', handleUserLogin);
+userRouter.post('/refresh-token', handleRefreshToken);
 userRouter.post('/google-auth', handleGoogleAuth);
 userRouter.post("/logout", handleLogout);
 userRouter.post("/forgot-password", forgotPassword);
@@ -37,7 +39,5 @@ userRouter.get("/notifications", verifyToken, getUserNotifications);
 userRouter.delete("/notifications", verifyToken, clearAllNotifications);
 userRouter.patch("/notifications/:index/read", verifyToken, markNotificationAsRead);
 
-//  "multer-storage-cloudinary": "^4.0.0",
-//  "cloudinary": "^2.7.0",
 
 export default userRouter;

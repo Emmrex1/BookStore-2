@@ -21,18 +21,19 @@ const PlaceOrder = () => {
     getCartAmount,
     setCartItems,
     navigate,
+    token,
   } = useContext(ShopContext);
 
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    street: "",
-    city: "",
-    state: "",
-    zip: "",
-    country: "",
+    firstName: user?.firstName || "",
+    lastName: user?.lastName || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    street: user?.address?.street || "",
+    city: user?.address?.city || "",
+    state: user?.address?.state || "",
+    zip: user?.address?.zip || "",
+    country: user?.address?.country || "",
   });
 
   const [method, setMethod] = useState("cod");
@@ -54,6 +55,7 @@ const PlaceOrder = () => {
     e.preventDefault();
     if (!user?._id) {
       toast.error("Please log in to place your order");
+      navigate("/login"); 
       return;
     }
 
@@ -87,7 +89,7 @@ const PlaceOrder = () => {
       if (!data.success) {
         toast.error(data.message);
       } else if (method === "cod") {
-        scroll(0, 0);
+        window.scrollTo(0, 0);
         setCartItems({});
         toast.success(
           "Order placed successfully! Payment will be collected on delivery",

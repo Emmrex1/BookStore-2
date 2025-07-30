@@ -308,7 +308,7 @@ function Navbar() {
                     Profile
                   </Link>
                   <Link
-                    to="/orders"
+                    to="/order"
                     onClick={() => setMobileMenuOpen(false)}
                     className="text-base font-medium text-gray-800 dark:text-white hover:text-orange-500"
                   >

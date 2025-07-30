@@ -1,4 +1,3 @@
-// server.js
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -17,19 +16,34 @@ const port = process.env.PORT || 4000;
 
 // Middlewares
 app.use(express.json());
-app.use(cookieParser()); 
+app.use(cookieParser());
+
 app.use(cors({
-  origin: ['https://emmrexbookstore.vercel.app', 'https://emmrexbookstore-admin.vercel.app'],
-  credentials: true, 
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      "https://emmrexbookstore.vercel.app",
+      "https://emmrexbookstore-admin.vercel.app",
+     
+    ];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
 }));
-connectDB();
+
+connectDB().catch((err) => {
+  console.error("Database connection failed:", err.message);
+});
 
 // Routes
 app.use("/api/user", userRouter);
 app.use("/api/product", productRouter);
-app.use("/api/auth",adminRouter)
-app.use("/api/cart", cartRouter)
-app.use("/api/order", orderRouter)
+app.use("/api/auth", adminRouter);
+app.use("/api/cart", cartRouter);
+app.use("/api/order", orderRouter);
 
 // Test route
 app.get("/", (req, res) => {
@@ -39,5 +53,4 @@ app.get("/", (req, res) => {
 // Start server
 app.listen(port, () => {
   console.log("Server running on PORT", port);
- 
 });

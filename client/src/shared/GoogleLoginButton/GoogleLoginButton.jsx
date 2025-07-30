@@ -34,10 +34,10 @@ function GoogleLoginButton() {
       if (res.data.success) {
         setToken(res.data.token); // ⬅️ Store token
         setUser(res.data.user); // ⬅️ Store user
-        toast.success("Login with Google successful!");
+        toast.success("Login successful!");
         navigate("/");
       } else {
-        toast.error(res.data.message || "Google login failed");
+        toast.error(res.data.message || "login failed");
       }
     } catch (err) {
       console.error("Google auth failed:", err);
@@ -49,7 +49,7 @@ function GoogleLoginButton() {
 
   return (
 
-      <FcGoogle className="text-xl " onClick={handleGoogleLogin} />
+      <FcGoogle className="text-xl mt-5" onClick={handleGoogleLogin} />
     
   );
 }

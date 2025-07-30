@@ -1,27 +1,28 @@
-// ✅ Login.jsx (Login Page)
-import { useState, useContext, useEffect } from "react";
+
+import { useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate, Link } from "react-router-dom";
-import { Eye, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { AdminContextApi } from "@/context/api/AdmincontexApi";
 import axios from "axios";
-
+import Spinner from "@/components/common/spinner";
+import { AdminContextApi } from "@/context/api/AdmincontexApi";
 
 const schema = z.object({
-  email: z.string().email("Invalid email"),
-  password: z.string().min(6, "Minimum 6 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  remember: z.boolean().optional(), 
 });
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setIsloading] = useState(false);
-  const { token, user,setToken, setUser, backendUrl } = useContext(AdminContextApi);
+  const [loading, setLoading] = useState(false);
+  const { login, backendUrl } = useContext(AdminContextApi); 
   const navigate = useNavigate();
 
   const {
@@ -33,89 +34,95 @@ const Login = () => {
   });
 
   const onSubmit = async (data) => {
-    setIsloading(true);
+    setLoading(true);
     try {
-      const res = await axios.post(
-        `${backendUrl}/api/auth/admin-login`,
-        {
-          email: data.email,
-          password: data.password,
-        },
-        {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await axios.post(`${backendUrl}/api/auth/admin-login`, data, {
+        withCredentials: true,
+      });
 
       if (res.data.success) {
-        setToken(res.data.token);
-        setUser(res.data.user); 
+        // Use the context login function with remember option
+        login(res.data.accessToken, res.data.user, data.remember);
         toast.success("Login successful!");
         navigate("/dashboard");
-      } else {
-        toast.error(res.data.message || "Login failed");
       }
     } catch (error) {
-      console.error("Login error:", error);
-      toast.error(error?.response?.data?.message || "Something went wrong");
+      const message = error.response?.data?.message || "Login failed";
+      toast.error(message);
     } finally {
-      setIsloading(false);
+      setLoading(false);
     }
   };
-  
-  useEffect(() => {
-    if (token && user) {
-      navigate("/dashboard");
-    }
-  }, [token, user, navigate]);
-  
-  
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md p-6 bg-white rounded shadow">
-        <div className="mb-6 flex items-center space-x-3">
-          <Link to="/">
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </Link>
-          <h1 className="text-lg font-semibold">Login to Admin</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="bg-white p-6 rounded-lg shadow-md w-full max-w-md"
+      >
+        <h2 className="text-2xl font-bold text-center mb-4">Admin Login</h2>
+
+        <div className="mb-4">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            {...register("email")}
+            className={errors.email ? "border-red-500" : ""}
+          />
+          {errors.email && (
+            <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+          )}
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" {...register("email")} />
-            {errors.email && (
-              <p className="text-sm text-red-500">{errors.email.message}</p>
-            )}
+        <div className="mb-4">
+          <Label htmlFor="password">Password</Label>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              {...register("password")}
+              className={errors.password ? "border-red-500" : ""}
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
+          {errors.password && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.password.message}
+            </p>
+          )}
+        </div>
 
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                {...register("password")}
-              />
-              <button
-                type="button"
-                className="absolute right-2 top-2 text-gray-500"
-                onClick={() => setShowPassword((prev) => !prev)}
-              >
-                <Eye className="h-4 w-4" />
-              </button>
-            </div>
-            {errors.password && (
-              <p className="text-sm text-red-500">{errors.password.message}</p>
-            )}
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
-          </Button>
-        </form>
-      </div>
+        {/* Remember Me checkbox */}
+        <div className="flex items-center mb-4">
+          <input
+            type="checkbox"
+            id="remember"
+            {...register("remember")}
+            className="mr-2 h-4 w-4 text-blue-600 rounded"
+          />
+          <Label htmlFor="remember">Remember me</Label>
+        </div>
+
+        <div className="flex justify-end mb-4">
+          <Link
+            to="/admin-forgot-password"
+            className="text-blue-600 text-sm hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
+
+        <Button type="submit" disabled={loading} className="w-full">
+          {loading ? <Spinner /> : "Login"}
+        </Button>
+      </form>
     </div>
   );
 };

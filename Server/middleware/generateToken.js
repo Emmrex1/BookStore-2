@@ -9,20 +9,27 @@ const generateToken = async (userId) => {
     }
 
     const JWT_SECRET = process.env.JWT_SECRET_KEY;
+    const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 
-    if (!JWT_SECRET) {
-      throw new Error("JWT_SECRET_KEY is not defined in .env");
+    if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
+      throw new Error("JWT_SECRET_KEY or JWT_REFRESH_SECRET not defined in .env");
     }
 
-    const token = jwt.sign(
+    const accessToken = jwt.sign(
       { userId: user._id, role: user.role },
       JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "15m" }
     );
 
-    return token;
+    const refreshToken = jwt.sign(
+      { userId: user._id },
+      JWT_REFRESH_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return { accessToken, refreshToken };
   } catch (error) {
-    console.error("Error generating Token", error);
+    console.error("Error generating tokens", error);
     throw error;
   }
 };

@@ -1,61 +1,82 @@
 
-import React, { createContext, useState, useEffect, useMemo } from "react";
+import React, { createContext, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "sonner";
-import { Currency } from "lucide-react";
 
 export const AdminContextApi = createContext();
 
-const AdminContextApiProvider = ({ children }) => {
+export const AdminContextProvider = ({ children }) => {
   const backendUrl = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
-  const currency = "$";
 
-  const [token, setToken] = useState(() => localStorage.getItem("token") || "");
-  const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem("user");
+  const [token, setTokenState] = useState(() => {
+    return (
+      localStorage.getItem("token") || sessionStorage.getItem("token") || ""
+    );
+  });
+
+  const [user, setUserState] = useState(() => {
+    const storedUser =
+      localStorage.getItem("user") || sessionStorage.getItem("user");
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
-  useEffect(() => {
-    if (token) {
-      localStorage.setItem("token", token);
-    } else {
-      localStorage.removeItem("token");
-    }
-  }, [token]);
+  
+  const login = (token, user, remember = false) => {
+    setTokenState(token);
+    setUserState(user);
 
-  useEffect(() => {
-    if (user) {
+    if (remember) {
+      // Persist in localStorage for long-term storage
+      localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
+
+      // Clear session storage
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("user");
     } else {
+      sessionStorage.setItem("token", token);
+      sessionStorage.setItem("user", JSON.stringify(user));
+
+      localStorage.removeItem("token");
       localStorage.removeItem("user");
     }
-  }, [user]);
+  };
 
   const logout = async () => {
     try {
-      await axios.post(`${backendUrl}/api/user/logout`, null, {
+      await axios.post(`${backendUrl}/api/auth/logout`, null, {
         withCredentials: true,
       });
-      setToken(null);
-      setUser(null);
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("user");
+
+      // Reset state
+      setTokenState("");
+      setUserState(null);
+
       toast.success("Logged out successfully");
-      navigate("/admin-login");
-    } catch (error) {
-      setToken(null);
-      setUser(null);
-      toast.error("You were logged out locally.");
       navigate("/admin-login");
     }
   };
 
   const value = useMemo(
-    () => ({ token, setToken, user, setUser, logout, backendUrl, currency }),
-    [token, user]
+    () => ({
+      token,
+      user,
+      login, 
+      logout,
+      backendUrl,
+      currency: "$",
+    }),
+    [token, user, backendUrl]
   );
 
   return (
@@ -65,4 +86,4 @@ const AdminContextApiProvider = ({ children }) => {
   );
 };
 
-export default AdminContextApiProvider;
+ export default AdminContextProvider;

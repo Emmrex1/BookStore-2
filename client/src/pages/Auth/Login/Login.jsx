@@ -14,6 +14,7 @@ import { ShopContext } from "@/context/ShopContext";
 import { FaFacebook, FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import GoogleLoginButton from "@/shared/GoogleLoginButton/GoogleLoginButton";
+import Spinner from "@/components/common/spinner";
 
 const schema = z.object({
   email: z.string().email("Invalid email address"),
@@ -37,22 +38,34 @@ const LoginPage = () => {
     setLoading(true);
     try {
       const res = await axios.post(`${backendUrl}/api/user/login`, data, {
-        withCredentials: true,
+        withCredentials: true, // Required to receive refreshToken cookie
       });
-      if (res?.data?.token && res?.data?.user) {
-        setToken(res.data.token);
-        setUser(res.data.user);
+
+      console.log("Login response:", res);
+
+      if (res.status === 200 && res.data?.accessToken && res.data?.user) {
+        const { accessToken, user } = res.data;
+
+        setToken(accessToken); // store in Redux or localStorage
+        setUser(user);
         toast.success("Login successful!");
-        navigate("/");
+
+        setTimeout(() => {
+          navigate("/");
+        }, 100);
       } else {
-        toast.error(res.data.message || "Login failed");
+        toast.error(res?.data?.message || "Unexpected login response");
       }
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Something went wrong");
+      console.error("Login error:", error);
+      toast.error(
+        error?.response?.data?.message || "Something went wrong during login"
+      );
     } finally {
       setLoading(false);
     }
   };
+
 
   // Placeholder functions for social logins
   const handleFacebookLogin = () => toast.info("Facebook login coming soon");
@@ -111,7 +124,7 @@ const LoginPage = () => {
           </div>
 
           <Button type="submit" className="w-full">
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? <Spinner/> : "Sign In"}
           </Button>
         </form>
 

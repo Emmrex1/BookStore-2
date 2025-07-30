@@ -248,18 +248,20 @@ const handleUserLogin = async (req, res) => {
     }
     
 
-    const token = await generateToken(user._id);
-   res.cookie("token", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Lax", 
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+   const { accessToken, refreshToken } = await generateToken(user._id);
+
+res.cookie("refreshToken", refreshToken, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "Lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000, 
+});
+
   
   res.status(200).json({
     success: true,
     message: "Login successful",
-    token, 
+    accessToken, 
     user,
   });
 
@@ -268,6 +270,38 @@ const handleUserLogin = async (req, res) => {
     res.status(500).send({ message: "Login failed. Try again." });
   }
 };
+
+const handleRefreshToken = async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(401).json({ success: false, message: "No refresh token provided" });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+    const user = await userModel.findById(decoded.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    const accessToken = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "15m" }
+    );
+
+    return res.status(200).json({
+      success: true,
+      accessToken,
+    });
+  } catch (error) {
+    console.error("Refresh token error:", error.message);
+    return res.status(403).json({ success: false, message: "Invalid or expired refresh token" });
+  }
+};
+
 
 // ✅ Register
 const handleUserRegister = async (req, res) => {
@@ -295,7 +329,6 @@ const handleUserRegister = async (req, res) => {
      subject: "🎉 Welcome to Emmrex Bookstore",
      html: registerSuccessTemplate(user.name),
 });
-
 
     res.status(200).send({
       message: "User registered successfully",
@@ -439,54 +472,41 @@ const handleDeleteUser = async (req, res) => {
 };
 
 // ✅ Admin Login
-const handleAdminLogin = async (req, res) => {
+ const handleAdminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    // Check if user exists
     const user = await userModel.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ success: false, message: "Admin not found" });
+    
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!await user.comparePassword(password)) {
+      return res.status(401).json({ message: "Invalid credentials" });
     }
-
-    // Check if user is an admin
     if (user.role !== "admin") {
-      return res.status(403).json({ success: false, message: "Access denied: Not an admin" });
+      return res.status(403).json({ message: "Admin access required" });
     }
 
-    // Compare passwords
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(400).json({ success: false, message: "Incorrect password" });
-    }
+    const { accessToken, refreshToken } = await generateToken(user._id);
 
-    // Token generation
-    const token = await generateToken(user._id);
-
-    // Set cookie
-    res.cookie("token", token, {
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "Lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, 
+      sameSite: "Strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "Admin login successful",
-      token,
+      accessToken,
       user: {
         _id: user._id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
-        role: user.role,
-        avatar: user.avatar || "",
-      },
+        role: user.role
+      }
     });
   } catch (error) {
-    console.error("Admin login failed:", error);
-    res.status(500).json({ success: false, message: "Login failed. Please try again." });
+    console.error("Admin login error:", error);
+    res.status(500).json({ message: "Server error during login" });
   }
 };
 
@@ -514,11 +534,11 @@ const deactivateAccount = async (req, res) => {
     });
 
     // ✅ Clear JWT cookie on deactivation
-    res.clearCookie("token", {
-      httpOnly: true,
-      sameSite: "Lax",
-      secure: process.env.NODE_ENV === "production",
-    });
+    res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Lax",
+  });
 
     return res.status(200).json({
       success: true,
@@ -667,7 +687,7 @@ await sendEmail({
 };
 
 const handleLogout = (req, res) => {
-  res.clearCookie("token", {
+  res.clearCookie("refreshToken", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "Lax",
@@ -680,6 +700,7 @@ const handleLogout = (req, res) => {
 
 export {
   handleUserLogin,
+  handleRefreshToken,
   handleUserRegister,
   handleGetAllUsers,
   handleUpdateUserByAdmin,
